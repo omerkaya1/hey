@@ -51,7 +51,7 @@ type report struct {
 	statusCodes []int
 
 	results chan *result
-	done    chan bool
+	done    chan struct{}
 	total   time.Duration
 
 	errorDist map[string]int
@@ -68,7 +68,7 @@ func newReport(w io.Writer, results chan *result, output string, n int) *report 
 	return &report{
 		output:      output,
 		results:     results,
-		done:        make(chan bool, 1),
+		done:        make(chan struct{}),
 		errorDist:   make(map[string]int),
 		w:           w,
 		connLats:    make([]float64, 0, cap),
@@ -110,7 +110,7 @@ func runReporter(r *report) {
 		}
 	}
 	// Signal reporter is done.
-	r.done <- true
+	close(r.done)
 }
 
 func (r *report) finalize(total time.Duration) {
